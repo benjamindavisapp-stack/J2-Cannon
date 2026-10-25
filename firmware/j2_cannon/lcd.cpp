@@ -61,9 +61,10 @@ bool lcdBegin() {
     return false;
   }
   Wire.begin();
-#if defined(WIRE_HAS_TIMEOUT)
-  Wire.setWireTimeout(3000, true);  // a glitched bus must not hang the loop
-#endif
+  // Without this, Wire waits forever on a misbehaving bus (miswired or
+  // unpowered LCD). Arduino AVR core 1.8.6 has setWireTimeout but does not
+  // define WIRE_HAS_TIMEOUT, so it is called unconditionally.
+  Wire.setWireTimeout(3000, true);
   static const uint8_t candidates[] = {0x27, 0x3F, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26,
                                        0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E};
   s_ok = false;
