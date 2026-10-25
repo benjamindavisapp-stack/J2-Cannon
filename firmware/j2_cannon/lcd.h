@@ -8,6 +8,7 @@
 
 bool lcdBegin();                              // probes the usual addresses, false if no LCD
 bool lcdPresent();
+bool lcdBusStuck();                           // SDA or SCL held low: wiring/power fault
 uint8_t lcdAddress();
 void lcdSetLine(uint8_t row, const char* text);  // pads/truncates to 16 chars
 void lcdPump();

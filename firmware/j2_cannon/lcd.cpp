@@ -8,6 +8,7 @@ static const uint8_t BL = 0x08;
 
 static uint8_t s_addr;
 static bool s_ok;
+static bool s_stuck;
 static char s_want[2][16];
 static char s_shown[2][16];
 static uint8_t s_cursorRow = 255, s_cursorCol = 255;
@@ -49,6 +50,16 @@ static void init4bit() {
 }
 
 bool lcdBegin() {
+  // A shorted or unpowered I2C bus can hang Wire on older Arduino cores, so
+  // check both lines idle high (pulled up) before touching it.
+  pinMode(SDA, INPUT_PULLUP);
+  pinMode(SCL, INPUT_PULLUP);
+  delayMicroseconds(20);
+  s_stuck = digitalRead(SDA) == LOW || digitalRead(SCL) == LOW;
+  if (s_stuck) {
+    s_ok = false;
+    return false;
+  }
   Wire.begin();
 #if defined(WIRE_HAS_TIMEOUT)
   Wire.setWireTimeout(3000, true);  // a glitched bus must not hang the loop
@@ -74,6 +85,7 @@ bool lcdBegin() {
 }
 
 bool lcdPresent() { return s_ok; }
+bool lcdBusStuck() { return s_stuck; }
 uint8_t lcdAddress() { return s_addr; }
 
 void lcdSetLine(uint8_t row, const char* text) {

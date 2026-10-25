@@ -23,6 +23,7 @@ struct Sim {
   int joyX = 512, joyY = 512;
   bool joyBtn = false;
   bool lcdAttached = true;
+  bool i2cStuck = false;   // SDA/SCL shorted low
 
   // Clock and I/O
   uint64_t t = 0;          // microseconds

@@ -460,6 +460,19 @@ static void t_no_lcd() {
   checkClean();
 }
 
+static void t_boot_progress_and_stuck_i2c() {
+  sim.i2cStuck = true;  // LCD shorted: must not hang, must say why
+  boot();
+  CHECK(sawSince(0, "# boot start"));
+  CHECK(sawSince(0, "# boot lcd skipped"));
+  CHECK(sawSince(0, "E BOOT fw=" FW_VERSION));
+  send("ZERO B");
+  send("MOVE 5 0");
+  runMs(3000);
+  CHECK(axisPosSteps(AX_YAW) == stepsFor(AX_YAW, 5));
+  checkClean();
+}
+
 static void t_garbage_input() {
   boot();
   size_t m = txMark();
@@ -508,6 +521,7 @@ static const Test TESTS[] = {
     {"settings_roundtrip", t_settings_roundtrip},
     {"inverted_dir", t_inverted_dir},
     {"no_lcd", t_no_lcd},
+    {"boot_progress_and_stuck_i2c", t_boot_progress_and_stuck_i2c},
     {"garbage_input", t_garbage_input},
 };
 

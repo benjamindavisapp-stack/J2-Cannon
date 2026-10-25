@@ -15,6 +15,7 @@ void ioStrP(const char* p);        // PROGMEM string
 void ioFloat(float v, uint8_t prec);
 void ioInt(long v);
 void ioEol();
+void ioFlush();                    // block until everything queued has gone out
 
 // Small fixed buffer for composing a line before queueing it.
 struct LineBuf {

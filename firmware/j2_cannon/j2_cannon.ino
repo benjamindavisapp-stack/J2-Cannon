@@ -424,6 +424,15 @@ static void lcdTask(uint32_t now) {
 
 // ------------------------------------------------------------------ main
 
+// Start-up progress, sent immediately so a hang shows where it stopped.
+// Lines starting with '#' are ignored by the Pi.
+static void bootStep(const char* p) {
+  ioStrP(PSTR("# boot "));
+  ioStrP(p);
+  ioEol();
+  ioFlush();
+}
+
 void setup() {
   wdt_disable();
   pressureBegin();  // compressor output LOW before anything else
@@ -431,10 +440,16 @@ void setup() {
   pinMode(PIN_LED_B, OUTPUT);
   ledSet(LED_OFF);
   ioBegin(SERIAL_BAUD);
+  bootStep(PSTR("start"));
   g_fromEeprom = settingsLoad();
+  bootStep(PSTR("settings ok"));
   steppersBegin();
+  bootStep(PSTR("steppers ok"));
   joyBegin();
-  lcdBegin();
+  bootStep(PSTR("joystick ok"));
+  if (lcdBegin()) bootStep(PSTR("lcd ok"));
+  else if (lcdBusStuck()) bootStep(PSTR("lcd skipped: SDA/SCL held low - check LCD wiring and power"));
+  else bootStep(PSTR("lcd not found on I2C"));
   lcdSetLine(0, "J2 CANNON " FW_VERSION);
   lcdSetLine(1, "JOG, DBL-CLK=0");
   g_lcdMsgUntil = millis();
@@ -445,6 +460,7 @@ void setup() {
   ioStrP(PSTR(" lcd="));
   ioInt(lcdPresent() ? lcdAddress() : 0);
   ioEol();
+  ioFlush();
   wdt_enable(WDTO_500MS);  // a hung loop resets the board, which drops the compressor
 }
 

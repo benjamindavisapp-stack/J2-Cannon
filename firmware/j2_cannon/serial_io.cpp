@@ -42,6 +42,11 @@ void ioInt(long v) {
 
 void ioEol() { ioPut('\n'); }
 
+void ioFlush() {
+  while (s_head != s_tail) Serial.write((uint8_t)s_tx[s_tail++]);
+  Serial.flush();
+}
+
 void ioPoll(LineHandler handler) {
   while (Serial.available() > 0) {
     char c = (char)Serial.read();

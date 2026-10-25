@@ -19,6 +19,8 @@ typedef uint8_t byte;
 #define A3 17
 #define A4 18
 #define A5 19
+#define SDA 18
+#define SCL 19
 #ifndef F_CPU
 #define F_CPU 16000000UL
 #endif
@@ -59,5 +61,6 @@ class HardwareSerial {
   int read();
   size_t write(uint8_t c);
   int availableForWrite();
+  void flush() {}
 };
 extern HardwareSerial Serial;

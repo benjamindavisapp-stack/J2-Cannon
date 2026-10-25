@@ -136,6 +136,7 @@ void digitalWrite(uint8_t p, uint8_t v) {
 
 int digitalRead(uint8_t p) {
   if (p == PIN_JOY_SW) return sim.joyBtn ? LOW : HIGH;
+  if (p == SDA || p == SCL) return sim.i2cStuck ? LOW : HIGH;
   return p < 20 ? sim.pin[p] : 0;
 }
 
