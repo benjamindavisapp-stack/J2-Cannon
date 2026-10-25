@@ -1,0 +1,106 @@
+# J2 Cannon configuration.
+#
+# Units: feet for positions and distances, inches for small dimensions,
+# degrees, psi, grams. Edit, then restart the app.
+#
+# Values you calibrate from the web page (gear ratios, efficiency, drag,
+# camera offsets) are saved to data/calibration.json and override the
+# values here. Delete that file to go back to these numbers.
+
+[serial]
+port = "auto"            # "auto" finds the RedBoard (/dev/ttyUSB* or /dev/ttyACM*)
+baud = 115200
+
+[web]
+host = "0.0.0.0"         # 0.0.0.0 = reachable from other devices on your network
+port = 8080
+
+[limelight]
+stream_url = "http://172.29.0.1:5800/"          # Limelight 3A over USB
+results_url = "http://172.29.0.1:5807/results"
+hfov_deg = 54.5          # Limelight 3A field of view
+vfov_deg = 42.0
+poll_hz = 15
+tag_id = -1              # AprilTag to use for range; -1 = whichever is seen first
+
+# steps/deg = motor_steps_per_rev * microsteps * gear_ratio / 360
+[turret]
+motor_steps_per_rev = 200
+microsteps = 8           # TB6600 DIP switch setting for this driver
+gear_ratio = 12.0        # ring gear teeth / pinion teeth - calibrate on the Calibrate tab
+max_speed_dps = 20       # automatic move speed
+accel_dps2 = 30
+jog_speed_dps = 15       # full-stick joystick speed
+min_deg = -90            # can be narrower than the firmware's +/-90, never wider
+max_deg = 90
+invert = false           # flip if positive yaw turns the turret left
+
+[pitch]
+motor_steps_per_rev = 200
+microsteps = 8
+gear_ratio = 40.0        # worm wheel teeth / worm starts - calibrate on the Calibrate tab
+max_speed_dps = 10
+accel_dps2 = 20
+jog_speed_dps = 8
+min_deg = -45            # firmware hard limits: -45 down, +90 up
+max_deg = 90
+invert = false           # flip if positive pitch lowers the barrel
+
+[joystick]
+invert_x = false         # flip if pushing right turns the turret left
+invert_y = false         # flip if pushing up lowers the barrel
+
+[pressure]
+max_psi = 75             # firmware refuses anything above 75
+min_psi = 8              # below this, shots are too weak to repeat (and shot detection needs 8+)
+hold_hysteresis_psi = 1.0   # top off when this far under the set pressure
+fill_overshoot_psi = 0.0    # stop filling this far early if the compressor overshoots
+fill_stall_s = 20        # fault if pressure doesn't rise 0.5 psi in this long
+fill_max_run_s = 300     # fault if the compressor runs this long without stopping
+
+[geometry]
+pivot_height_ft = 4.0    # pitch axle height above the ground the base sits on
+muzzle_forward_in = 30.0 # pitch axle to muzzle, measured along the barrel
+muzzle_up_in = 0.0       # barrel centreline above (+) or below (-) the axle
+muzzle_right_in = 0.0    # barrel centreline right (+) or left (-) of the turret axis
+camera_forward_in = 10.0 # Limelight lens relative to the pitch axle, in the barrel frame
+camera_right_in = 0.0
+camera_up_in = 4.0
+camera_yaw_offset_deg = 0.0    # lens aim relative to the barrel (set by boresight calibration)
+camera_pitch_offset_deg = 0.0
+
+[launcher]
+barrel_length_in = 48.0  # from where the projectile sits to the muzzle
+barrel_bore_in = 2.0     # barrel inside diameter
+# Air reservoir pipes: [length_in, inside_diameter_in] for each piece.
+chamber = [[48.0, 2.0], [48.0, 2.0]]
+efficiency = 0.30        # share of expansion energy reaching the projectile - fitted from shots
+
+[projectile]
+mass_g = 60.0
+diameter_in = 2.6
+drag_coefficient = 0.5   # fitted from shots
+
+[ballistics]
+air_density_kg_m3 = 1.2
+strategy = "min_pressure"     # "min_pressure" or "fixed_pressure"
+fixed_pressure_psi = 60       # used by "fixed_pressure"
+arc = "low"                   # "low" or "high" (lob)
+lob_angle_deg = 60            # elevation used for a high-arc shot in min_pressure mode
+reuse_pressure = true         # chamber already above what's needed? re-aim for the pressure you have
+max_range_ft = 400
+
+[aim]
+auto_pressurize = true        # start filling as soon as an aim is accepted
+trim_to_actual_pressure = true  # re-aim for the measured pressure once filled
+target_height_ft = 0.0        # height assumed for clicked targets (0 = on the ground)
+track_rate_hz = 4
+track_deadband_deg = 0.3
+
+[sim]
+# Used only with --sim (no hardware). The "true" values let you practise calibration.
+fill_rate_psi_s = 4.0
+true_efficiency = 0.26
+true_drag_coefficient = 0.6
+target_ft = [60.0, 10.0, 0.0]     # simulated Limelight target (forward, right, height)
+target_motion = "circle"          # "none" or "circle"

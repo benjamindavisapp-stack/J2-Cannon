@@ -1,0 +1,18 @@
+# Start the J2 Cannon app at boot.
+#   1. Change User and the paths below to match your Pi.
+#   2. sudo cp j2cannon.service /etc/systemd/system/
+#   3. sudo systemctl enable --now j2cannon
+#   Logs: journalctl -u j2cannon -f
+[Unit]
+Description=J2 Cannon controller
+After=network-online.target
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/J2-Cannon/pi
+ExecStart=/usr/bin/python3 -m j2cannon
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

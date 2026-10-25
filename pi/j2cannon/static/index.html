@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>J2 Cannon</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <h1>J2 Cannon <span id="simBadge" class="badge warn" hidden>SIMULATION</span></h1>
+  <div class="chips">
+    <span class="chip" id="chipLink">RedBoard</span>
+    <span class="chip" id="chipCam">Limelight</span>
+    <span class="chip" id="chipZero">Zero</span>
+    <span class="chip" id="chipMotors">Motors</span>
+    <span class="chip" id="chipMode">Manual</span>
+  </div>
+  <button id="btnStop" class="stop" title="Stop motion and compressor (Space)">STOP</button>
+</header>
+
+<main>
+  <section class="left">
+    <div class="video" id="video">
+      <img id="stream" alt="">
+      <canvas id="overlay" width="640" height="480"></canvas>
+      <div class="video-note" id="videoNote">No camera stream</div>
+    </div>
+    <div class="clickbar">
+      <label>Click does
+        <select id="clickMode">
+          <option value="ground">Aim: target on flat ground</option>
+          <option value="distance">Aim: click + distance</option>
+          <option value="tag">Aim: AprilTag in view</option>
+          <option value="boresight">Boresight: click the marker</option>
+        </select>
+      </label>
+      <label id="lblDist" hidden>Distance <input id="clickDist" type="number" step="1" min="1" value="50"> ft</label>
+      <label id="lblHeight">Target height <input id="clickHeight" type="number" step="0.5" value="0"> ft</label>
+    </div>
+    <div class="readout">
+      <div><span class="k">Yaw</span> <span id="roYaw" class="v">--</span> <span class="t" id="roYawT"></span></div>
+      <div><span class="k">Pitch</span> <span id="roPitch" class="v">--</span> <span class="t" id="roPitchT"></span></div>
+      <div><span class="k">Target</span> <span id="roTarget" class="v small">none</span></div>
+    </div>
+  </section>
+
+  <section class="right">
+    <div class="panel status">
+      <div class="phase" id="phase">Manual</div>
+      <div class="pressure">
+        <div class="psi"><span id="psi">--</span><small> psi</small></div>
+        <div class="gauge"><div class="fill" id="gaugeFill"></div><div class="mark" id="gaugeMark"></div></div>
+        <div class="pinfo"><span id="pstate">--</span> <span id="ptarget"></span>
+          <span class="led" id="led"></span></div>
+      </div>
+      <div class="fault" id="fault" hidden>
+        <span id="faultText"></span> <button id="btnClear2">Clear fault</button>
+      </div>
+    </div>
+
+    <nav class="tabs">
+      <button data-tab="aim" class="active">Aim</button>
+      <button data-tab="manual">Manual</button>
+      <button data-tab="cal">Calibrate</button>
+    </nav>
+
+    <div class="tab panel" id="tab-aim">
+      <h3>Target coordinates <small>(ft from the turret base)</small></h3>
+      <div class="row">
+        <label>Forward <input id="tFwd" type="number" step="1" value="50"></label>
+        <label>Right <input id="tRight" type="number" step="1" value="0"></label>
+        <label>Height <input id="tHeight" type="number" step="0.5" value="0"></label>
+        <button id="btnAim" class="primary">Aim</button>
+      </div>
+
+      <h3>Solution</h3>
+      <div class="solution" id="solution"><span class="muted">Aim at something to see the solution.</span></div>
+      <canvas id="traj" width="560" height="150"></canvas>
+
+      <div class="row">
+        <button id="btnLook">Look at target</button>
+        <button id="btnRearm">Re-arm (refill)</button>
+        <button id="btnPStop">Stop compressor</button>
+      </div>
+
+      <h3>Tracking</h3>
+      <div class="row">
+        <select id="trackMethod">
+          <option value="ground">Range from flat ground</option>
+          <option value="tag">Range from AprilTag</option>
+        </select>
+        <button id="btnTrack">Start tracking</button>
+        <button id="btnTrackStop">Stop tracking</button>
+      </div>
+
+      <h3>Strategy</h3>
+      <div class="row">
+        <label><input type="radio" name="strategy" value="min_pressure"> Lowest pressure</label>
+        <label><input type="radio" name="strategy" value="fixed_pressure"> Fixed pressure
+          <input id="fixedPsi" type="number" step="1" min="1" max="75" value="60"> psi</label>
+      </div>
+      <div class="row">
+        <label><input type="radio" name="arc" value="low"> Low arc</label>
+        <label><input type="radio" name="arc" value="high"> High arc (lob)</label>
+      </div>
+      <div class="row">
+        <label><input type="checkbox" id="optAuto"> Pressurize after aiming</label>
+        <label><input type="checkbox" id="optReuse"> Use pressure already in the chamber</label>
+        <label><input type="checkbox" id="optTrim"> Fine-tune angle to measured pressure</label>
+      </div>
+    </div>
+
+    <div class="tab panel" id="tab-manual" hidden>
+      <h3>Jog <small>(hold; arrow keys work too)</small></h3>
+      <div class="jog">
+        <button class="jogbtn" data-y="0" data-p="1">&#9650;</button>
+        <button class="jogbtn" data-y="-1" data-p="0">&#9664;</button>
+        <button class="jogbtn" data-y="1" data-p="0">&#9654;</button>
+        <button class="jogbtn" data-y="0" data-p="-1">&#9660;</button>
+      </div>
+      <label class="wide">Speed <input id="jogSpeed" type="range" min="0.05" max="1" step="0.05" value="0.5"></label>
+
+      <h3>Zero <small>(point straight ahead and level first)</small></h3>
+      <div class="row">
+        <button data-zero="turret">Zero turret</button>
+        <button data-zero="pitch">Zero pitch</button>
+        <button data-zero="both" class="primary">Zero both</button>
+      </div>
+
+      <h3>Motors</h3>
+      <div class="row">
+        <button id="btnEnable">Enable</button>
+        <button id="btnDisable">Disable (free)</button>
+      </div>
+
+      <h3>Pressure</h3>
+      <div class="row">
+        <label>Fill to <input id="manPsi" type="number" step="1" min="1" max="75" value="40"> psi</label>
+        <button id="btnFill" class="primary">Fill</button>
+        <button id="btnPStop2">Stop compressor</button>
+        <button id="btnClear">Clear fault</button>
+      </div>
+    </div>
+
+    <div class="tab panel" id="tab-cal" hidden>
+      <h3>Gear ratios</h3>
+      <p class="muted" id="ratios"></p>
+      <div class="row">
+        <select id="calAxis"><option value="turret">Turret</option><option value="pitch">Pitch</option></select>
+        <label>Move <input id="calDeg" type="number" step="5" value="30"> deg</label>
+        <button id="btnCalMove">Test move</button>
+      </div>
+      <div class="row">
+        <label>It actually moved <input id="calMeasured" type="number" step="0.1"> deg</label>
+        <button id="btnCalApply" class="primary">Apply</button>
+      </div>
+
+      <h3>Shots <small>(enter where each one landed)</small></h3>
+      <p class="muted" id="modelInfo"></p>
+      <div class="tablewrap">
+        <table id="shots">
+          <thead><tr><th>#</th><th>Pitch</th><th>psi</th><th>Predicted ft</th><th>Measured ft</th><th>Landing ht</th><th>Use</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="row">
+        <button id="btnFitE">Fit efficiency</button>
+        <button id="btnFitED">Fit efficiency + drag</button>
+        <button id="btnSimFire" class="warnbtn" hidden>Sim: fire</button>
+      </div>
+      <div id="fitResult"></div>
+
+      <h3>Camera boresight</h3>
+      <p class="muted">Put a marker somewhere you can measure, enter where it is, set "Click does" to Boresight and click the marker in the video.</p>
+      <div class="row">
+        <label>Forward <input id="bsFwd" type="number" step="1" value="50"></label>
+        <label>Right <input id="bsRight" type="number" step="1" value="0"></label>
+        <label>Height <input id="bsHeight" type="number" step="0.5" value="0"></label>
+      </div>
+    </div>
+
+    <div class="panel log" id="log"></div>
+  </section>
+</main>
+<script src="/static/app.js"></script>
+</body>
+</html>

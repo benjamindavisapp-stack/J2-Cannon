@@ -1,0 +1,4 @@
+# On Raspberry Pi OS Bookworm prefer: sudo apt install python3-flask python3-serial
+flask>=2.2
+pyserial>=3.5
+tomli>=2.0; python_version < "3.11"

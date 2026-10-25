@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+# Calibration results and shot log live here (back them up, but keep them out of git)
+pi/data/
+firmware/test/test_firmware
+firmware/test/fw_host
+firmware/test/build-avr/
